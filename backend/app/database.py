@@ -1,8 +1,10 @@
+from functools import lru_cache
 from pathlib import Path
 
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import create_engine, text
+from sqlalchemy.orm import Session
 
 
 class DatabaseSettings(BaseSettings):
@@ -13,6 +15,22 @@ class DatabaseSettings(BaseSettings):
         extra="ignore",
         hide_input_in_errors=True,
     )
+
+
+@lru_cache
+def get_engine():
+    """Reuse the connection pool; open connections only when needed."""
+    return create_engine(
+        DatabaseSettings().database_url.get_secret_value(),
+        connect_args={"connect_timeout": 5},
+        pool_pre_ping=True,
+    )
+
+
+def get_session():
+    """Give each request its own session and roll back unfinished work on close."""
+    with Session(get_engine()) as session:
+        yield session
 
 
 def check_database_connection() -> bool:
