@@ -98,6 +98,13 @@ def get_current_user(
     return user
 
 
+def require_admin(user: Annotated[User, Depends(get_current_user)]) -> User:
+    """Authorize against the current database role, not the JWT role claim."""
+    if user.role != "admin":
+        raise HTTPException(403, "Admin privileges required")
+    return user
+
+
 @router.post("/register", status_code=201, response_model=UserResponse)
 def register(payload: RegisterRequest, session: DatabaseSession):
     user = User(

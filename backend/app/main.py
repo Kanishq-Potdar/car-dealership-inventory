@@ -3,9 +3,11 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app.auth import router as auth_router
+from app.vehicles import router as vehicles_router
 
 app = FastAPI(title="Car Dealership Inventory System")
 app.include_router(auth_router)
+app.include_router(vehicles_router)
 
 
 @app.exception_handler(RequestValidationError)

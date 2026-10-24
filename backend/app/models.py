@@ -1,4 +1,6 @@
-from sqlalchemy import CheckConstraint, String, UniqueConstraint
+from decimal import Decimal
+
+from sqlalchemy import CheckConstraint, Numeric, String, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -19,3 +21,25 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(254))
     password_hash: Mapped[str] = mapped_column(String(255))
     role: Mapped[str] = mapped_column(String(20), server_default="customer")
+
+
+class Vehicle(Base):
+    __tablename__ = "vehicles"
+    __table_args__ = (
+        CheckConstraint("price > 0 AND price <= 9999999999.99", name="ck_vehicles_price"),
+        CheckConstraint("quantity >= 0", name="ck_vehicles_quantity"),
+        CheckConstraint("year >= 1886 AND year <= 9999", name="ck_vehicles_year"),
+        CheckConstraint(
+            "length(trim(make)) > 0 AND length(trim(model)) > 0 "
+            "AND length(trim(category)) > 0",
+            name="ck_vehicles_nonempty_text",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    make: Mapped[str] = mapped_column(String(100))
+    model: Mapped[str] = mapped_column(String(100))
+    year: Mapped[int | None]
+    category: Mapped[str] = mapped_column(String(50))
+    price: Mapped[Decimal] = mapped_column(Numeric(12, 2))
+    quantity: Mapped[int]
