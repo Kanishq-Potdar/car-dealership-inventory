@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+@theme { --font-sans: "Segoe UI", Arial, sans-serif; }
+@layer base {
+  body { @apply m-0 antialiased; background: #f7f8f5; color: #182d28; }
+  button, a, input { -webkit-tap-highlight-color: transparent; }
+  button { @apply cursor-pointer; }
+  button:disabled { @apply cursor-not-allowed opacity-50; }
+  :focus-visible { outline: 3px solid #ab7628; outline-offset: 4px; }
+  h1, h2, h3 { @apply font-semibold; }
+  label { @apply block text-sm font-semibold; }
+  input { @apply block w-full mt-2 px-3 py-3 rounded-lg border bg-white text-sm font-normal; border-color: #d8ded7; color: #182d28; }
+  input::placeholder { color: #78857e; }
+  small { @apply block mt-2 text-xs font-normal leading-relaxed; color: #63716a; }
+}
+@layer components {
+  .site-header { @apply flex items-center justify-between gap-4 px-6 md:px-12 py-6 border-b bg-white; border-color: #e3e7df; }
+  .brand { @apply flex items-center gap-3 no-underline text-sm font-bold tracking-widest; }
+  .brand small { font-size: 8px; letter-spacing: .15em; margin-top: 3px; }
+  .brand-mark { @apply grid place-items-center rounded-lg text-white text-xl; width: 42px; height: 42px; background: #153e35; position: relative; }
+  .brand-mark span { @apply absolute text-xs; right: 5px; top: 0; }
+  .role-badge { @apply hidden sm:block text-xs border rounded-full px-3 py-1.5; border-color: #dce4dc; }
+  .primary, .secondary, .danger { @apply rounded-lg px-5 py-3 text-sm font-semibold inline-flex justify-center items-center; }
+  .primary { background: #153e35; color: white; }
+  .primary:hover:not(:disabled) { background: #245747; }
+  .secondary { @apply bg-white border; border-color: #d8ded7; }
+  .danger { @apply bg-red-800 text-white; }
+  .text-button, .danger-link { @apply text-sm font-semibold py-2; }
+  .danger-link { color: #a5362b; }
+  .inline-link { @apply underline underline-offset-4 font-semibold; }
+  .muted { color: #65736c; }
+  .eyebrow { @apply text-xs font-semibold tracking-widest mb-5; color: #677b63; }
+  .dashboard { @apply max-w-[1440px] mx-auto px-5 md:px-12 py-10; }
+  .page-heading { @apply flex flex-wrap items-center justify-between gap-6 mb-9; }
+  .page-heading h1 { @apply text-3xl md:text-5xl tracking-tight mb-4; }
+  .page-heading h1 span { color: #789466; }
+  .stats { @apply grid grid-cols-2 md:grid-cols-3 rounded-xl border mb-9 bg-white; border-color: #e0e5db; }
+  .stats > div { @apply px-6 py-5; }
+  .stats > div + div { @apply border-l; border-color: #e0e5db; }
+  .stats span { @apply block text-xs uppercase tracking-wider; color: #69786e; }
+  .stats strong { @apply block text-3xl font-semibold mt-2; }
+  .stats .stat-note { @apply hidden md:flex items-center gap-5; background: #eef1e7; }
+  .stat-note p { @apply text-sm leading-6; }
+  .stat-note strong { @apply text-base mt-0; }
+  .stats .dot { @apply block w-3 h-3 rounded-full; background: #82986e; box-shadow: 0 0 0 8px #e1e8d6; }
+  .inventory-layout { @apply grid gap-8 lg:grid-cols-[240px_1fr]; }
+  .filter-panel { @apply bg-white p-6 border rounded-xl self-start; border-color: #e0e5db; }
+  .results-heading { @apply flex justify-between items-center gap-3 mb-5; }
+  .results-heading h2 { @apply text-lg; }
+  .results-heading > span { @apply text-xs; color: #65736c; }
+  .vehicle-grid { @apply grid sm:grid-cols-2 xl:grid-cols-3 gap-5; }
+  .vehicle-card { @apply bg-white rounded-xl border overflow-hidden; border-color: #dfe5dc; }
+  .vehicle-visual { @apply relative p-5 pt-12; background: #edf0e8; color: #455b50; }
+  .vehicle-card:nth-child(3n+2) .vehicle-visual { background: #eeeae2; color: #6b6657; }
+  .vehicle-card:nth-child(3n) .vehicle-visual { background: #e6ecee; color: #4e6673; }
+  .category-tag { @apply absolute left-4 top-4 text-[10px] tracking-wider uppercase px-2 py-1 bg-white rounded; max-width: 85%; overflow-wrap: anywhere; }
+  .car-art { @apply block w-full; }
+  .illustration-label { @apply block text-center text-[8px] tracking-[.2em] mt-2 opacity-60; }
+  .card-body { @apply p-5; }
+  .vehicle-year { @apply text-xs; color: #778277; }
+  .stock { @apply text-[10px] font-semibold rounded-full px-2 py-1; color: #31593d; background: #eaf2e8; }
+  .stock.out { color: #7a6955; background: #f2eee8; }
+  .card-body h3 { @apply text-xl mt-3 mb-5; overflow-wrap: anywhere; }
+  .price-row { @apply flex flex-wrap justify-between items-center gap-2 border-t pt-4 mb-5; border-color: #edf0e9; }
+  .price-row strong { @apply text-xl tracking-tight; }
+  .price-row span { @apply text-[10px]; color: #748073; }
+  .admin-actions { @apply flex justify-between border-t mt-4 pt-2; border-color: #edf0e9; }
+  .notice { @apply rounded-lg border p-4 text-sm mb-5; background: #edf4e9; border-color: #d0dfc5; }
+  .notice.error { background: #fff1ee; border-color: #edcfc8; color: #8e3326; }
+  .empty-state { @apply border rounded-xl bg-white px-6 py-16 text-center text-sm; border-color: #e0e5db; color: #68776c; }
+  .empty-state .car-art { @apply max-w-64 mx-auto mb-4; color: #84927b; }
+  .empty-state h3 { @apply text-xl mb-3; color: #213b2e; }
+  .loading-dot { @apply inline-block w-2 h-2 rounded-full mr-3; background: #51745a; }
+  .modal { @apply m-auto rounded-xl border-0 p-6 sm:p-8 w-[min(560px,calc(100%-32px))] max-h-[90vh] overflow-y-auto shadow-xl; color: #182d28; }
+  .modal::backdrop { background: #122c24a6; }
+  .modal h2 { @apply text-xl; }
+  .auth-layout { @apply grid lg:grid-cols-2 max-w-[1360px] mx-auto px-5 md:px-12 py-10 md:py-16 gap-12 lg:gap-20 items-center; min-height: 75vh; }
+  .auth-story { @apply rounded-2xl px-7 pt-10 md:px-10 md:pt-12 overflow-hidden; background: #e9eddf; }
+  .auth-story h1 { @apply text-4xl md:text-6xl tracking-tight leading-[1.1] mb-6; }
+  .auth-story p { @apply max-w-sm text-sm leading-7; color: #61715e; }
+  .auth-story .large { @apply mt-8 mb-5; color: #526b4c; }
+  .story-caption { @apply flex justify-between gap-3 border-t py-5 text-[10px] tracking-wide; border-color: #ced8c4; }
+  .auth-panel { @apply w-full max-w-md mx-auto; }
+  .auth-panel h2 { @apply text-3xl tracking-tight mb-3; }
+  .site-footer { @apply max-w-[1440px] mx-auto px-6 md:px-12 py-8 flex flex-wrap justify-between gap-3 text-xs; color: #788277; }
+  .skip-link { @apply fixed top-2 left-2 bg-white p-3 z-50; transform: translateY(-150%); }
+  .skip-link:focus { transform: translateY(0); }
+}

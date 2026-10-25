@@ -14,7 +14,7 @@ from app.models import User
 def vehicle_payload():
     return {
         "make": "Toyota", "model": "Corolla", "year": 2024,
-        "category": "Sedan", "price": "25000.50", "quantity": 3,
+        "category": "Sedan", "price": "25000.50", "quantity": 3, "condition": "used",
     }
 
 
@@ -94,7 +94,7 @@ def test_admin_replaces_and_deletes_vehicle(vehicle_context, vehicle_payload):
     client, connection, _, headers = vehicle_context
     vehicle = create_vehicle(vehicle_context, vehicle_payload)
     updated = {"make": "Honda", "model": "Civic", "year": 2025,
-               "category": "Hatchback", "price": "31000.25", "quantity": 0}
+               "category": "Hatchback", "price": "31000.25", "quantity": 0, "condition": "used"}
     response = client.put(f"/api/vehicles/{vehicle['id']}", json=updated, headers=headers["admin"])
     assert response.status_code == 200
     assert response.json() == {"id": vehicle["id"], **updated}

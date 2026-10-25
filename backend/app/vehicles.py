@@ -1,13 +1,16 @@
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
-from sqlalchemy import func, select, update
+from sqlalchemy import select, update
+from pydantic_settings import BaseSettings
 
 from app.auth import DatabaseSession, get_current_user, require_admin
 from app.models import Vehicle
+from app.database import DatabaseSettings
+from app.vehicle_search import search_statement
 
 
 class VehicleRequest(BaseModel):
@@ -19,6 +22,7 @@ class VehicleRequest(BaseModel):
     category: str = Field(min_length=1, max_length=50)
     price: Decimal = Field(gt=0, max_digits=12, decimal_places=2, allow_inf_nan=False)
     quantity: int = Field(strict=True, ge=0, le=2**31 - 1)
+    condition: Literal["new", "used"] = "used"
 
     @field_validator("year")
     @classmethod
@@ -40,9 +44,32 @@ class RestockRequest(BaseModel):
     quantity: int = Field(strict=True, gt=0, le=2**31 - 1)
 
 
+class StockAdjustment(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    delta: int = Field(strict=True, ge=-(2**31 - 1), le=2**31 - 1)
+
+    @field_validator("delta")
+    @classmethod
+    def nonzero(cls, value):
+        if value == 0:
+            raise ValueError("Stock adjustment must be nonzero")
+        return value
+
+
+class InventorySettings(BaseSettings):
+    model_config = DatabaseSettings.model_config
+    low_stock_threshold: int = Field(default=3, ge=0, le=2**31 - 1)
+
+
+class StockAlerts(BaseModel):
+    threshold: int
+    vehicles: list[VehicleResponse]
+
+
 class VehicleSearch(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
+    q: str | None = Field(default=None, min_length=1, max_length=200)
     make: str | None = Field(default=None, min_length=1, max_length=100)
     model: str | None = Field(default=None, min_length=1, max_length=100)
     category: str | None = Field(default=None, min_length=1, max_length=50)
@@ -76,16 +103,16 @@ def list_vehicles(session: DatabaseSession):
 
 @router.get("/search", response_model=list[VehicleResponse], dependencies=[Depends(get_current_user)])
 def search_vehicles(filters: Annotated[VehicleSearch, Query()], session: DatabaseSession):
-    statement = select(Vehicle)
-    for name in ("make", "model", "category"):
-        value = getattr(filters, name)
-        if value is not None:
-            statement = statement.where(func.lower(getattr(Vehicle, name)) == value.lower())
-    if filters.min_price is not None:
-        statement = statement.where(Vehicle.price >= filters.min_price)
-    if filters.max_price is not None:
-        statement = statement.where(Vehicle.price <= filters.max_price)
-    return session.scalars(statement.order_by(Vehicle.id)).all()
+    return session.scalars(search_statement(session, filters)).all()
+
+
+@router.get("/alerts", response_model=StockAlerts, dependencies=[Depends(require_admin)])
+def stock_alerts(session: DatabaseSession, out_of_stock: bool = False):
+    threshold = InventorySettings().low_stock_threshold
+    vehicles = session.scalars(select(Vehicle).where(
+        Vehicle.quantity <= (0 if out_of_stock else threshold)
+    ).order_by(Vehicle.quantity, Vehicle.id)).all()
+    return StockAlerts(threshold=threshold, vehicles=vehicles)
 
 
 def get_vehicle_for_update(session, vehicle_id):
@@ -101,6 +128,8 @@ def update_vehicle(vehicle_id: VehicleId, payload: VehicleRequest, session: Data
     """Replace all editable fields; the generated ID remains unchanged."""
     vehicle = get_vehicle_for_update(session, vehicle_id)
     for name, value in payload.model_dump().items():
+        if name == "condition" and name not in payload.model_fields_set:
+            continue
         setattr(vehicle, name, value)
     session.commit()
     session.refresh(vehicle)
@@ -150,3 +179,9 @@ def purchase_vehicle(vehicle_id: VehicleId, session: DatabaseSession):
              dependencies=[Depends(require_admin)])
 def restock_vehicle(vehicle_id: VehicleId, payload: RestockRequest, session: DatabaseSession):
     return change_stock(session, vehicle_id, payload.quantity)
+
+
+@router.post("/{vehicle_id}/adjust-stock", response_model=VehicleResponse,
+             dependencies=[Depends(require_admin)])
+def adjust_stock(vehicle_id: VehicleId, payload: StockAdjustment, session: DatabaseSession):
+    return change_stock(session, vehicle_id, payload.delta)

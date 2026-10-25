@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from sqlalchemy import CheckConstraint, Numeric, String, UniqueConstraint
+from sqlalchemy import CheckConstraint, Index, Numeric, String, UniqueConstraint, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -26,6 +26,10 @@ class User(Base):
 class Vehicle(Base):
     __tablename__ = "vehicles"
     __table_args__ = (
+        CheckConstraint("condition IN ('new', 'used')", name="ck_vehicles_condition"),
+        UniqueConstraint("sample_key", name="uq_vehicles_sample_key"),
+        Index("ix_vehicles_price", "price"),
+        Index("ix_vehicles_quantity", "quantity"),
         CheckConstraint("price > 0 AND price <= 9999999999.99", name="ck_vehicles_price"),
         CheckConstraint("quantity >= 0", name="ck_vehicles_quantity"),
         CheckConstraint("year >= 1886 AND year <= 9999", name="ck_vehicles_year"),
@@ -43,3 +47,9 @@ class Vehicle(Base):
     category: Mapped[str] = mapped_column(String(50))
     price: Mapped[Decimal] = mapped_column(Numeric(12, 2))
     quantity: Mapped[int]
+    condition: Mapped[str] = mapped_column(String(4), server_default="used")
+    # Internal provenance key: never accepted from public API requests.
+    sample_key: Mapped[str | None] = mapped_column(String(100))
+
+
+Index("ix_vehicles_category", func.lower(Vehicle.category))

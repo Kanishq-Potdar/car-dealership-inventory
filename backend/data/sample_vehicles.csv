@@ -1,0 +1,61 @@
+sample_id,make,model,category,year,price,condition,quantity
+maruti-alto-k10,Maruti Suzuki,Alto K10,Hatchback,2024,480000.00,new,8
+maruti-swift,Maruti Suzuki,Swift,Hatchback,2024,750000.00,new,6
+maruti-baleno,Maruti Suzuki,Baleno,Hatchback,2023,680000.00,used,3
+maruti-dzire,Maruti Suzuki,Dzire,Sedan,2023,720000.00,used,2
+maruti-brezza,Maruti Suzuki,Brezza,SUV,2024,1100000.00,new,4
+maruti-ertiga,Maruti Suzuki,Ertiga,MPV,2024,1200000.00,new,5
+maruti-grand-vitara,Maruti Suzuki,Grand Vitara,SUV,2024,1600000.00,new,2
+tata-tiago,Tata,Tiago,Hatchback,2024,650000.00,new,6
+tata-altroz,Tata,Altroz,Hatchback,2023,750000.00,used,3
+tata-punch,Tata,Punch,SUV,2024,820000.00,new,7
+tata-nexon,Tata,Nexon,SUV,2024,1200000.00,new,4
+tata-nexon-ev,Tata,Nexon EV,SUV,2024,1550000.00,new,2
+tata-harrier,Tata,Harrier,SUV,2022,1700000.00,used,1
+tata-safari,Tata,Safari,SUV,2024,2400000.00,new,0
+mahindra-bolero,Mahindra,Bolero,SUV,2023,900000.00,used,3
+mahindra-scorpio-n,Mahindra,Scorpio N,SUV,2024,1900000.00,new,4
+mahindra-xuv700,Mahindra,XUV700,SUV,2024,2350000.00,new,2
+mahindra-thar,Mahindra,Thar,SUV,2022,1400000.00,used,1
+mahindra-xuv300,Mahindra,XUV300,SUV,2021,850000.00,used,2
+hyundai-i10,Hyundai,Grand i10 Nios,Hatchback,2024,720000.00,new,6
+hyundai-i20,Hyundai,i20,Hatchback,2023,850000.00,used,4
+hyundai-aura,Hyundai,Aura,Sedan,2024,820000.00,new,3
+hyundai-verna,Hyundai,Verna,Sedan,2024,1500000.00,new,2
+hyundai-venue,Hyundai,Venue,SUV,2023,1000000.00,used,3
+hyundai-creta,Hyundai,Creta,SUV,2024,1750000.00,new,5
+hyundai-tucson,Hyundai,Tucson,SUV,2023,2800000.00,used,1
+kia-sonet,Kia,Sonet,SUV,2024,1100000.00,new,4
+kia-seltos,Kia,Seltos,SUV,2024,1700000.00,new,3
+kia-carens,Kia,Carens,MPV,2023,1450000.00,used,2
+toyota-glanza,Toyota,Glanza,Hatchback,2024,900000.00,new,4
+toyota-hyryder,Toyota,Urban Cruiser Hyryder,SUV,2024,1700000.00,new,3
+toyota-innova-crysta,Toyota,Innova Crysta,MPV,2022,2100000.00,used,2
+toyota-innova-hycross,Toyota,Innova Hycross,MPV,2024,2900000.00,new,1
+toyota-fortuner,Toyota,Fortuner,SUV,2021,3100000.00,used,2
+toyota-camry,Toyota,Camry,Sedan,2023,3900000.00,used,0
+honda-amaze,Honda,Amaze,Sedan,2024,900000.00,new,5
+honda-city,Honda,City,Sedan,2023,1250000.00,used,3
+honda-elevate,Honda,Elevate,SUV,2024,1500000.00,new,4
+skoda-slavia,Skoda,Slavia,Sedan,2024,1600000.00,new,2
+skoda-kushaq,Skoda,Kushaq,SUV,2023,1450000.00,used,1
+skoda-kodiaq,Skoda,Kodiaq,SUV,2022,3000000.00,used,1
+vw-polo,Volkswagen,Polo,Hatchback,2020,650000.00,used,2
+vw-virtus,Volkswagen,Virtus,Sedan,2024,1700000.00,new,3
+vw-taigun,Volkswagen,Taigun,SUV,2024,1800000.00,new,2
+renault-kwid,Renault,Kwid,Hatchback,2023,470000.00,used,3
+renault-kiger,Renault,Kiger,SUV,2024,850000.00,new,4
+nissan-magnite,Nissan,Magnite,SUV,2024,900000.00,new,5
+mg-hector,MG,Hector,SUV,2023,1650000.00,used,2
+mg-zs-ev,MG,ZS EV,SUV,2024,2450000.00,new,1
+jeep-compass,Jeep,Compass,SUV,2022,2100000.00,used,2
+citroen-c3,Citroen,C3,Hatchback,2024,800000.00,new,3
+bmw-320d,BMW,320d,Sedan,2021,3300000.00,used,1
+bmw-x1,BMW,X1,SUV,2024,4900000.00,new,2
+mercedes-c200,Mercedes-Benz,C200,Sedan,2022,4300000.00,used,1
+mercedes-glc,Mercedes-Benz,GLC,SUV,2024,7600000.00,new,0
+audi-a4,Audi,A4,Sedan,2022,3200000.00,used,2
+audi-q3,Audi,Q3,SUV,2024,4800000.00,new,1
+volvo-xc60,Volvo,XC60,SUV,2023,5200000.00,used,1
+lexus-es300h,Lexus,ES 300h,Sedan,2024,6500000.00,new,1
+ford-endeavour,Ford,Endeavour,SUV,2020,2500000.00,used,0
