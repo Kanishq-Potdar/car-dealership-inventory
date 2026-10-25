@@ -1,6 +1,6 @@
 export type Vehicle = {
   id: number; make: string; model: string; category: string;
-  year: number | null; price: string; quantity: number
+  year: number | null; price: string; quantity: number; condition: 'new' | 'used'
 }
 export type VehicleInput = Omit<Vehicle, 'id'>
 export type Session = { token: string; role: string; expires: number }
