@@ -1,68 +1,110 @@
 # Car Dealership Inventory System
 
-> **Deployment documentation:** The sections below describe the earlier authentication checkpoint and have not yet been fully refreshed. The repository now includes vehicle inventory and a React frontend. Use the [current frontend setup and Vercel/Render deployment guide](frontend/README.md#deploy-to-vercel-with-the-render-backend) and [backend operations guide](backend/README.md) for the current application. Deployment requires a public `VITE_API_BASE_URL` in Vercel and an exact `CORS_ALLOWED_ORIGINS` allowlist on Render.
-
-A TDD-focused software engineering assignment for a car dealership inventory system. The current checkpoint implements the PostgreSQL connection and authentication foundation. **Vehicle inventory and the frontend are not implemented yet.**
+A TDD-focused software engineering assignment implementing a full-stack car dealership inventory system: a FastAPI/PostgreSQL backend deployed on Render and a React + Tailwind CSS frontend deployed on Vercel.
 
 ## Current functionality
 
-| Area | Status |
-| --- | --- |
-| FastAPI health endpoint | Implemented: `GET /health` returns `{"status":"ok"}`. This is application liveness, not a database health endpoint. |
-| PostgreSQL connectivity | Implemented: SQLAlchemy connection check runs `SELECT 1`. |
-| Registration | Implemented: users are persisted with Argon2id password hashes and the `customer` role. |
-| Login | Implemented: email/password login returns an HS256-signed JWT valid for 30 minutes. |
-| JWT verification | Implemented as the reusable `get_current_user` dependency; checks signature, expiration, required claims, and an existing user. |
-| Role handling | Registration rejects client-supplied roles. The authentication dependency returns the current database user, rather than trusting a token's role. No admin workflow or role-restricted business endpoint exists yet. |
-| Vehicle inventory API | Not implemented. |
-| Frontend | Not implemented; there is no frontend directory, package manifest, or frontend run command. |
-| Screenshots | Not supplied yet; see the screenshots section. |
-
-Only `/health`, `/api/auth/register`, and `/api/auth/login` are application endpoints. FastAPI also provides API documentation. The `/protected` route used by tests belongs to a separate test application and is not a production endpoint.
+| Area                    | Status                                                                                                                                                                                                                                         |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| FastAPI health endpoint | Implemented: `GET /health` returns `{"status":"ok"}`.                                                                                                                                                                                          |
+| PostgreSQL connectivity | Implemented: SQLAlchemy connection pool; `SELECT 1` check confirms reachability.                                                                                                                                                               |
+| Registration            | Implemented: full name, email (normalized, validated), Argon2id password hash, `customer` role persisted. Extra fields including `role` are rejected.                                                                                          |
+| Login                   | Implemented: email/password login returns an HS256-signed JWT valid for 30 minutes.                                                                                                                                                            |
+| JWT verification        | Implemented as the reusable `get_current_user` dependency: validates signature, algorithm (HS256 only), expiry, required claims (`sub`, `iat`, `exp`), and live database user lookup.                                                          |
+| Role handling           | Registration rejects client-supplied roles. `get_current_user` returns the current database role, not a token claim. Admin bootstrap via interactive `app.bootstrap_admin`.                                                                    |
+| Vehicle inventory API   | Implemented: create, read, update, delete, search (with `q`, `make`, `model`, `category`, `min_price`, `max_price`, condition, sort), atomic purchase, atomic restock, admin stock adjustment (`/adjust-stock`), low-stock alerts (`/alerts`). |
+| Schema migration        | Implemented: `app.migrate` applies DDL in a serialized transaction; adds `condition`, indexes, trigram support. `app.seed_catalogue` loads a 60-row sample.                                                                                    |
+| CORS                    | Implemented: explicit origin allowlist with `_UnhandledExceptionMiddleware` ensuring 500 responses carry CORS headers for allowed origins.                                                                                                     |
+| React frontend          | Implemented: customer storefront (search, filters, purchase), admin workspace (CRUD, price editing, stock adjustment, low-stock alerts), hash routing, session storage JWT, responsive/mobile layout.                                          |
+| Deployment              | Backend on Render (`https://car-dealership-inventory-hcpa.onrender.com`). Frontend on Vercel (`https://car-dealership-inventory-flame.vercel.app`). See [frontend/README.md](frontend/README.md) for deploy steps.                             |
+| Screenshots             | Playwright-generated screenshots from isolated test inventory — see [Screenshots](#screenshots) below.                                                                                                                                         |
 
 ## Tech stack
 
-- Python 3.13 (current environment verified with Python 3.13.5).
-- FastAPI and Uvicorn for the backend API.
-- PostgreSQL 17, started with Docker Compose.
-- SQLAlchemy and psycopg for database access.
-- Pydantic and pydantic-settings for validation and environment configuration.
-- pwdlib with Argon2 for password hashing, PyJWT for tokens, and email-validator for email validation.
-- pytest and FastAPI TestClient/httpx for tests.
+**Backend**
 
-Exact Python dependency versions are in [backend/requirements.txt](backend/requirements.txt). No frontend framework is recorded as implemented in this repository.
+- Python 3.13 (verified: 3.13.5).
+- FastAPI 0.162.0 and Uvicorn for the API.
+- PostgreSQL 17, started with Docker Compose locally; hosted on Render in production.
+- SQLAlchemy 2.1.6 and psycopg 3.3.6 for database access.
+- Pydantic 2.14.1 and pydantic-settings 2.16.1 for validation and environment configuration.
+- pwdlib (Argon2) for password hashing, PyJWT for tokens, email-validator for email validation.
+- pytest 9.1.1 and FastAPI TestClient for tests.
+- Starlette 1.9.0 (via FastAPI).
+
+**Frontend**
+
+- React 19.3.1 and TypeScript 7.0.2.
+- Vite 8.3.5 (build + dev proxy).
+- Tailwind CSS 4.3.3 via `@tailwindcss/vite`.
+- Playwright 1.64.1 for browser integration tests (dev dependency).
+- Node.js 24 (development/test environment).
+
+Exact dependency versions are in [backend/requirements.txt](backend/requirements.txt) and [frontend/package.json](frontend/package.json).
 
 ## Project structure
 
 ```text
 .
-|-- README.md
-|-- PROMPTS.md
-|-- .env.example
-|-- docker-compose.yml
-`-- backend/
-    |-- requirements.txt
-    |-- app/
-    |   |-- main.py          # FastAPI application, routes, validation errors
-    |   |-- database.py      # Environment settings, connection pool, sessions
-    |   |-- models.py        # SQLAlchemy user model
-    |   |-- auth.py          # Registration, login, JWT authentication dependency
-    |   `-- init_db.py       # Creates missing tables; does not migrate existing ones
-    `-- tests/
-        |-- test_health.py
-        |-- test_database.py
-        `-- test_auth.py
+├── README.md
+├── PROMPTS.md
+├── TEST_REPORT.md
+├── .env.example
+├── docker-compose.yml
+├── docs/
+│   └── screenshots/             # Tracked genuine test screenshots
+├── backend/
+│   ├── README.md                # Backend operations, migration, seeding, admin bootstrap
+│   ├── requirements.txt
+│   ├── app/
+│   │   ├── main.py              # FastAPI app, routers, validation error handler
+│   │   ├── database.py          # Settings, connection pool, session factory
+│   │   ├── models.py            # SQLAlchemy User and Vehicle models
+│   │   ├── auth.py              # Registration, login, JWT dependency
+│   │   ├── vehicles.py          # Vehicle CRUD, purchase, restock, adjustment, alerts
+│   │   ├── vehicle_search.py    # Search filter/sort logic
+│   │   ├── cors.py              # CORS allowlist middleware (with 500-safe inner middleware)
+│   │   ├── init_db.py           # create_all for fresh databases
+│   │   ├── migrate.py           # Explicit DDL migration (Phase 1)
+│   │   ├── bootstrap_admin.py   # Interactive first-admin provisioning
+│   │   └── seed_catalogue.py    # 60-row sample catalogue loader
+│   ├── data/
+│   │   └── sample_vehicles.csv
+│   └── tests/
+│       ├── conftest.py          # Isolated schema fixture
+│       ├── test_health.py
+│       ├── test_database.py
+│       ├── test_auth.py
+│       ├── test_inventory.py
+│       ├── test_vehicles.py
+│       ├── test_vehicle_search.py
+│       ├── test_phase1.py       # Phase 1 migration, seeding, admin bootstrap, alerts
+│       └── test_cors.py         # CORS allowlist and 500 header coverage
+└── frontend/
+    ├── README.md                # Frontend local setup, checks, deploy guide
+    ├── package.json
+    ├── vite.config.ts
+    ├── playwright.config.ts
+    ├── src/
+    │   ├── main.tsx
+    │   ├── App.tsx              # Auth flows, session management, routing
+    │   ├── Dashboard.tsx        # Customer storefront and admin workspace
+    │   ├── api.ts               # Typed API client (fetch-based)
+    │   ├── ui.tsx               # Shared UI primitives
+    │   └── styles.css
+    ├── tests/
+    │   └── api.test.mjs         # Database-free API client unit tests
+    └── e2e/
+        └── dashboard.spec.ts    # Playwright browser integration tests
 ```
 
-The local `.env` and `.venv/` are deliberately ignored by Git.
+The local `.env` and `.venv/` are deliberately ignored by Git. `frontend/node_modules/`, `frontend/dist/`, and `frontend/test-results/` are also ignored.
 
 ## Local setup
 
-These instructions use **Windows PowerShell**, matching the current development environment. Install Python 3.13, Git, and Docker Desktop with Docker Compose, and start Docker Desktop before starting PostgreSQL. The backend runs on the host; only PostgreSQL runs in Docker.
+These instructions use **Windows PowerShell**, matching the development environment. Install Python 3.13, Git, Node.js 24, and Docker Desktop before starting.
 
-### 1. Get the project and install backend dependencies
-
-For a new checkout:
+### 1. Clone and install backend dependencies
 
 ```powershell
 git clone https://github.com/Kanishq-Potdar/car-dealership-inventory.git
@@ -71,11 +113,9 @@ py -3.13 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r backend/requirements.txt
 ```
 
-For an existing checkout, use its project directory and existing `.venv` instead of creating another checkout or virtual environment. Explicit virtual-environment paths below mean activation is not required.
+For an existing checkout, reuse its `.venv` and project directory.
 
 ### 2. Configure environment variables
-
-From the project root, copy the template only if `.env` does not already exist:
 
 ```powershell
 if (-not (Test-Path -LiteralPath .env)) {
@@ -83,23 +123,23 @@ if (-not (Test-Path -LiteralPath .env)) {
 }
 ```
 
-Edit your local `.env` using [.env.example](.env.example) as the template:
+Edit `.env` using [.env.example](.env.example) as the template:
 
-| Variable | Purpose |
-| --- | --- |
-| `DB_PASSWORD` | Password used by Docker Compose when PostgreSQL first initializes. Replace `replace-me`. |
-| `DATABASE_URL` | SQLAlchemy connection URL using the `postgresql+psycopg` driver. Use the same password as `DB_PASSWORD`. |
-| `JWT_SECRET` | A randomly generated signing secret of at least 32 characters. There is no application fallback secret. |
+| Variable               | Purpose                                                                            |
+| ---------------------- | ---------------------------------------------------------------------------------- |
+| `DB_PASSWORD`          | Password used by Docker Compose when PostgreSQL first initializes.                 |
+| `DATABASE_URL`         | SQLAlchemy connection URL with `postgresql+psycopg` driver. Match `DB_PASSWORD`.   |
+| `JWT_SECRET`           | Randomly generated signing secret, minimum 32 characters. No application fallback. |
+| `LOW_STOCK_THRESHOLD`  | Integer; admin alerts include stock at or below this value. Default `3`.           |
+| `CORS_ALLOWED_ORIGINS` | JSON array of allowed browser origins. Use `[]` locally (Vite proxy handles it).   |
 
-For the supplied Compose configuration, the database user and database name are both `dealership`, with host `localhost` and port `5432` when the backend runs on the host. The URL shape is:
+URL shape for the supplied Compose configuration:
 
 ```text
 postgresql+psycopg://dealership:<URL-encoded password>@localhost:5432/dealership
 ```
 
-The angle-bracket text is an explanation, not a literal password. URL-encode reserved characters in the password when placing it in `DATABASE_URL`; `DB_PASSWORD` remains the actual password. Keep `.env` private and out of screenshots or chat logs. Process environment variables override `.env` values.
-
-To generate a signing secret without printing it, run this from the root after copying `.env`. It preserves an existing nonempty secret:
+Generate `JWT_SECRET` without printing it:
 
 ```powershell
 @'
@@ -117,50 +157,56 @@ print('JWT_SECRET configured; value not displayed.')
 
 ### 3. Start PostgreSQL
 
-From the project root:
-
 ```powershell
 docker compose up -d db
 docker compose ps
 ```
 
-Wait for the database service to become healthy. The container is named `dealership-db`; data persists in the Compose-managed `postgres_data` volume.
-
-To stop the service while preserving its data:
-
-```powershell
-docker compose stop db
-```
-
-Changing `DB_PASSWORD` in `.env` does not change a password in an already initialized database volume. If credentials disagree, reconcile the existing database credentials and configuration; do not delete the volume to make tests pass.
+Wait for the database to become healthy. Data persists in the Compose-managed `postgres_data` volume.
 
 ### 4. Initialize and run the backend
 
-From the project root:
+From `backend/`:
 
 ```powershell
-cd backend
-..\.venv\Scripts\python.exe -m app.init_db
-..\.venv\Scripts\python.exe -m uvicorn app.main:app --reload
+..\\.venv\Scripts\python.exe -B -m app.init_db
+..\\.venv\Scripts\python.exe -B -m app.migrate
+..\\.venv\Scripts\python.exe -B -m uvicorn app.main:app --reload
 ```
 
-`app.init_db` creates missing tables. It does not drop data, seed an admin, or upgrade an existing table's structure. Restart the backend after changing environment configuration.
+`init_db` creates missing tables. `migrate` applies Phase 1 DDL (idempotent). Optionally seed the 60-row sample:
+
+```powershell
+..\\.venv\Scripts\python.exe -B -m app.seed_catalogue
+```
+
+Optionally bootstrap the first admin account (interactive, hides password input):
+
+```powershell
+..\\.venv\Scripts\python.exe -B -m app.bootstrap_admin
+```
 
 Open:
 
 - API documentation: <http://127.0.0.1:8000/docs>
 - Health endpoint: <http://127.0.0.1:8000/health>
-- OpenAPI schema: <http://127.0.0.1:8000/openapi.json>
-
-The interactive API documentation is a development tool, not the planned dealership frontend.
 
 ### 5. Frontend setup
 
-There is no frontend to install or start at this checkpoint. Do not run assumed `npm install` or `npm run dev` commands. Add the actual framework, prerequisites, environment settings, install/build/run commands, and frontend tests here when that implementation exists.
+From `frontend/` (Node.js 24):
+
+```powershell
+npm.cmd ci
+npm.cmd run dev
+```
+
+Open the URL printed by Vite, normally `http://127.0.0.1:5173`. Vite proxies `/api` to `http://127.0.0.1:8000`; no CORS change is needed locally. To use a different backend, set `$env:API_TARGET = 'http://127.0.0.1:8001'` before starting Vite.
+
+See [frontend/README.md](frontend/README.md) for the full deployment guide, Vercel settings, and Render CORS configuration.
 
 ## Authentication API
 
-Both endpoints accept JSON. Example values below are disposable demonstration data, not real credentials. Calling registration against the normal running backend creates a development user.
+Both endpoints accept JSON. Example values are disposable demonstration data.
 
 ### Register: `POST /api/auth/register`
 
@@ -172,13 +218,9 @@ Both endpoints accept JSON. Example values below are disposable demonstration da
 }
 ```
 
-Required fields are `full_name`, `email`, and `password`. Names are trimmed and must be 1-100 characters. Email addresses are validated, trimmed, and normalized to lowercase. Registration passwords must be 12-128 characters. Extra fields, including `role`, are rejected.
-
-- `201`: returns `id`, `full_name`, `email`, and `role` (`customer`).
-- `409`: email already registered, including normalized case variants.
+- `201`: `id`, `full_name`, `email`, `role` (`customer`).
+- `409`: email already registered.
 - `422`: missing/invalid fields or a supplied role.
-
-Passwords are hashed before storage; password hashes are not returned. A database unique constraint protects email uniqueness, and failed inserts are rolled back.
 
 ### Login: `POST /api/auth/login`
 
@@ -189,60 +231,129 @@ Passwords are hashed before storage; password hashes are not returned. A databas
 }
 ```
 
-- `200`: returns `access_token` and `token_type` (`bearer`).
-- `401`: `Invalid email or password`, with the same message for an unknown email and an incorrect password.
-- `422`: invalid or missing request fields.
+- `200`: `access_token` and `token_type` (`bearer`).
+- `401`: `Invalid email or password` (same message for unknown email and wrong password).
+- `422`: invalid or missing fields.
 
-Tokens contain a subject (`sub`), issue time (`iat`), expiration (`exp`), and role. They are signed, not encrypted; they do not contain passwords. `get_current_user` accepts `Authorization: Bearer <token>`, permits HS256 only, requires `sub`, `iat`, and `exp`, validates time claims, and looks up the user in PostgreSQL. Invalid tokens or missing users return `401` with `WWW-Authenticate: Bearer`. This dependency is ready for future protected endpoints; no vehicle endpoint exists yet.
+## Vehicle inventory API
+
+All vehicle endpoints require `Authorization: Bearer <token>`. Admin-only endpoints additionally require the `admin` role in the current database record (not the JWT claim).
+
+| Method   | Path                              | Auth     | Description                                                                                                           |
+| -------- | --------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------- |
+| `GET`    | `/api/vehicles/search`            | Customer | Search/filter/sort vehicles. Params: `q`, `make`, `model`, `category`, `min_price`, `max_price`, `condition`, `sort`. |
+| `POST`   | `/api/vehicles`                   | Admin    | Create a vehicle listing.                                                                                             |
+| `PUT`    | `/api/vehicles/{id}`              | Admin    | Replace a vehicle listing.                                                                                            |
+| `DELETE` | `/api/vehicles/{id}`              | Admin    | Delete a listing.                                                                                                     |
+| `POST`   | `/api/vehicles/{id}/purchase`     | Customer | Atomic stock decrement by 1. Returns `409` on zero stock.                                                             |
+| `POST`   | `/api/vehicles/{id}/restock`      | Admin    | Add stock units.                                                                                                      |
+| `POST`   | `/api/vehicles/{id}/adjust-stock` | Admin    | Signed delta adjustment. `{"delta": -2}` or `{"delta": 5}`. Returns `409` on negative result.                         |
+| `GET`    | `/api/vehicles/alerts`            | Admin    | Listings at or below `LOW_STOCK_THRESHOLD`. Add `?out_of_stock=true` for zero-only.                                   |
 
 ## Running tests
 
-Start PostgreSQL and configure `.env` first. The tests use a real PostgreSQL connection and fail if it is unavailable; they do not silently skip database checks. A running Uvicorn process is not required.
+### Backend
+
+Start PostgreSQL and configure `.env` first. Tests use a real PostgreSQL connection and fail if it is unavailable. A running Uvicorn process is not required.
 
 From `backend/`:
 
 ```powershell
-..\.venv\Scripts\python.exe -B -m pytest -q -p no:cacheprovider
+..\\.venv\Scripts\python.exe -B -m pytest -q -p no:cacheprovider
 ```
 
 Focused suites:
 
 ```powershell
-..\.venv\Scripts\python.exe -B -m pytest tests/test_health.py tests/test_database.py -q -p no:cacheprovider
-..\.venv\Scripts\python.exe -B -m pytest tests/test_auth.py -q -p no:cacheprovider
+# Database-free (CORS, health, search logic)
+..\\.venv\Scripts\python.exe -B -m pytest tests/test_cors.py tests/test_health.py tests/test_vehicle_search.py -q -p no:cacheprovider
+
+# Requires PostgreSQL
+..\\.venv\Scripts\python.exe -B -m pytest tests/test_auth.py tests/test_inventory.py tests/test_vehicles.py tests/test_phase1.py -q -p no:cacheprovider
 ```
 
-Authentication tests create a unique schema inside an outer transaction on the configured PostgreSQL database. Dependency overrides direct ORM operations to that schema, and per-request sessions use savepoints. Teardown rolls back the transaction, including the schema. These are isolated schemas, **not a separate test database**. The configured database user needs permission to create schemas. Tests do not call `init_db` on development tables or reset development data. Future code that opens independent connections or bypasses the overridden session must preserve this isolation explicitly.
+Tests create unique temporary schemas in the configured database, run all operations, and roll back on teardown. Development data is never reset or seeded.
 
-Coverage includes health, connectivity, registration persistence and hashing, duplicate emails, invalid input, role-assignment rejection, invalid credentials, signed tokens, and HTTP-level dependency acceptance/rejection for valid, expired, malformed, unsigned, incorrectly signed, wrong-algorithm, and missing-claim tokens.
+### Frontend
 
-Latest observed full-suite result during documentation review on **2026-10-25** (Python 3.13.5, existing Windows development environment):
+From `frontend/`:
 
-```text
-40 passed, 1 warning in 23.08s
+```powershell
+# Database-free API client unit tests
+npm.cmd run test:api
+
+# Type-check
+npm.cmd run check
+
+# Full browser integration tests (requires PostgreSQL + backend)
+npx.cmd playwright install chromium
+npm.cmd test
 ```
 
-The warning is the existing Starlette/httpx TestClient deprecation. It was not suppressed or fixed as part of documentation work. This result is not a claim that a fresh installation or another operating system was tested. The `-B` and `no:cacheprovider` options avoid writing Python bytecode and pytest caches during these runs.
+Browser tests start dedicated API/Vite servers on ports 8011/5174, create a temporary schema, and drop it on completion. See [frontend/README.md](frontend/README.md) for full test coverage details.
+
+See [TEST_REPORT.md](TEST_REPORT.md) for actual test run results.
+
+## Deployment
+
+| Component | Service | URL                                                  |
+| --------- | ------- | ---------------------------------------------------- |
+| Backend   | Render  | `https://car-dealership-inventory-hcpa.onrender.com` |
+| Frontend  | Vercel  | `https://car-dealership-inventory-flame.vercel.app`  |
+
+Render environment variables required: `DATABASE_URL` (with `postgresql+psycopg://` prefix), `JWT_SECRET`, `LOW_STOCK_THRESHOLD`, `CORS_ALLOWED_ORIGINS` (JSON array containing the exact Vercel production origin: `["https://car-dealership-inventory-flame.vercel.app"]`).
+
+Vercel build settings: Root Directory `frontend`, Framework Preset `Vite`, Install Command `npm ci`, Build Command `npm run build`, Output Directory `dist`, environment variable `VITE_API_BASE_URL=https://car-dealership-inventory-hcpa.onrender.com`.
+
+See [frontend/README.md](frontend/README.md#deploy-to-vercel-with-the-render-backend) for the full deployment checklist.
 
 ## Screenshots
 
-No screenshots have been supplied or embedded yet. Add genuine captures with captions when available:
+The screenshots below are Playwright-generated captures from isolated test inventory (three seeded test vehicles). They are not production data and do not show real dealership listings or prices. The image files are stored in `docs/screenshots/` and tracked in the repository.
 
-- Current backend: API docs, registration/login responses, and the test result. Hide passwords, tokens, and private configuration.
-- Future frontend: registration/login screens and inventory workflows, only after those features are implemented.
+### Customer storefront — desktop
 
-No UI mockup or placeholder image is presented as a working application screenshot.
+![Customer storefront, desktop layout, showing vehicle cards with filters sidebar](docs/screenshots/storefront-desktop.png)
 
-## AI usage and assignment evidence
+The storefront shows the vehicle collection with brand/model/category multi-select filters, condition dropdown, price range controls, and a search bar. Stock-available vehicles show a purchase button; out-of-stock vehicles are disabled.
 
-See [PROMPTS.md](PROMPTS.md) for actual excerpts available from the development conversation, observed TDD output excerpts, a separately labeled activity summary, and the personal reflection still required from the student.
+### Customer storefront — mobile
 
-The original assignment brief was uploaded in a separate ChatGPT conversation and is not available in this repository. These documents cover the requirements established in the current conversation; they are **not a verified checklist against the complete original rubric**. The brief and any separate project plan are still needed for that final check.
+![Customer storefront, mobile layout, filters stacked above vehicle list](docs/screenshots/storefront-mobile.png)
 
-## Remaining work
+The same storefront in a narrow viewport: filters stack above the vehicle list and the layout adapts for touch use.
 
-- Implement vehicle inventory and the frontend against the original assignment requirements.
-- Document the real frontend setup and tests once it exists.
-- Add genuine screenshots.
-- Supply the original assignment brief/project plan, any required full AI transcripts or accessible chat links, and the student's own AI-usage reflection.
-- Recheck documentation against the full rubric before submission. The current initializer is not a database migration system; future schema changes will need an explicit migration approach.
+### Admin workspace
+
+![Admin workspace showing vehicle inventory table with Edit price, Adjust stock, and Delete controls](docs/screenshots/admin-inventory.png)
+
+The admin workspace shows the inventory management table with stock-watch alerts panel, search, and per-vehicle edit price, adjust stock, and delete actions. The "+ Add vehicle" button opens a creation form.
+
+> **Note:** These screenshots come from the Playwright test suite's isolated temporary schema. Image files are stored in `docs/screenshots/` (tracked in Git) as well as the test runner's ignored output directory `frontend/test-results/`.
+
+## My AI Usage
+
+## Student AI-Usage Reflection
+
+I used ChatGPT, OpenAI Codex, and Antigravity at different stages of this project. I began with ChatGPT for brainstorming, understanding the assignment, defining the scope, and planning the development workflow before writing application code. I then used Codex extensively during implementation, testing, debugging, and documentation. Antigravity helped investigate and fix a CORS issue involving unhandled server errors and also assisted with the final documentation review.
+
+My approach was iterative rather than accepting AI-generated code without checking it. I wanted to follow a test-driven development workflow: understand the requirement, write focused tests, observe failures where practical, implement the required behavior, and rerun the tests. For example, the database connectivity and authentication work involved tests that failed when the required functionality was missing and passed after implementation. I also reviewed test output to distinguish genuine assertion failures from setup or import errors.
+
+Through this process, I developed a better understanding of PostgreSQL connectivity and session management, password hashing, JWT authentication, and role-based authorization. I also learned that security decisions must be enforced by the backend rather than relying on frontend controls. During the CORS investigation, I gained a better understanding of how ASGI middleware ordering affects whether browser responses include CORS headers, including when the server returns an unexpected 500 error.
+
+AI assistance also required verification and correction. I reviewed suggested changes, checked Git history and co-author attribution, and used test results to evaluate whether fixes worked. For the final documentation, I distinguished recently rerun tests from historical results and identified missing evidence rather than presenting incomplete transcripts as complete records.
+
+Overall, AI tools helped me work through unfamiliar implementation details faster and made it easier to iterate across the backend, frontend, tests, and deployment configuration. However, the experience also showed me that generated code and explanations are not automatically correct. I remain responsible for understanding the system, checking the evidence, protecting credentials, and being transparent about what was tested and what remains incomplete.
+
+## Running tests (results summary)
+
+See [TEST_REPORT.md](TEST_REPORT.md) for detailed results, commands, dates, and warnings.
+
+## Remaining work and open items
+
+- **Student reflection**: must be written by the student and added to [PROMPTS.md](PROMPTS.md).
+- **Screenshots in Git**: captured in `docs/screenshots/` and embedded in this README; confirm inclusion in submission package.
+- **Full conversation transcripts**: complete ChatGPT/Codex/Antigravity export or shared links, if required by the rubric (a shared link for ChatGPT is supplied in [PROMPTS.md](PROMPTS.md)).
+- **Original assignment brief**: supply for a final rubric check; the complete rubric has not been verified from this repository.
+- **Trigram extension**: `pg_trgm` is available on the inspected PostgreSQL 17 installation but must be installed and migration rerun for typo-tolerant search; this is optional.
+- **No payment processing or order history**: explicit design decision documented in [frontend/README.md](frontend/README.md).

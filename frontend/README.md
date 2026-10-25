@@ -63,10 +63,10 @@ For local development leave `VITE_API_BASE_URL` unset or empty, as shown in [.en
 Once Vercel assigns the production URL, set **`CORS_ALLOWED_ORIGINS` on the Render backend** to a JSON array containing that exact origin, for example:
 
 ```text
-["https://YOUR-VERCEL-PRODUCTION-DOMAIN.vercel.app"]
+["https://car-dealership-inventory-flame.vercel.app"]
 ```
 
-Replace the example with the actual URL's scheme and host, without a path. The final frontend domain is not yet known. For a custom domain, add its exact origin to the array as well. Do not use `*` or a wildcard for all Vercel subdomains. Preview URLs are denied unless explicitly added; only enable a preview against this backend if you intend it to access the same data. A separate staging backend is preferable for preview testing.
+Replace the example with the actual URL's scheme and host, without a path (e.g. `https://car-dealership-inventory-flame.vercel.app`). For a custom domain, add its exact origin to the array as well. Do not use `*` or a wildcard for all Vercel subdomains. Preview URLs are denied unless explicitly added; only enable a preview against this backend if you intend it to access the same data. A separate staging backend is preferable for preview testing.
 
 Deploy the backend code containing the CORS middleware and restart/redeploy Render after setting the variable. Defaults allow no cross-origin browser access. The allowlist accepts JSON arrays only and invalid origin values fail startup. Only GET/POST/PUT/DELETE and Authorization/Content-Type are permitted for cross-origin API calls. Cookies are not enabled; JWT Bearer authentication and admin checks still apply. CORS controls browser access, not API authorization. See [FastAPI CORS documentation](https://fastapi.tiangolo.com/tutorial/cors/).
 
