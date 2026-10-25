@@ -45,10 +45,26 @@ def search_statement(session, filters):
         ranks.append(func.greatest(*(rank for _, rank in matches)))
     if filters.category is not None:
         statement = statement.where(func.lower(Vehicle.category) == filters.category.lower())
+    for name, values in (("make", filters.makes), ("model", filters.models),
+                         ("category", filters.categories)):
+        if values:
+            statement = statement.where(func.lower(getattr(Vehicle, name)).in_(
+                [value.lower() for value in values]
+            ))
+    if filters.condition is not None:
+        statement = statement.where(Vehicle.condition == filters.condition)
     if filters.min_price is not None:
         statement = statement.where(Vehicle.price >= filters.min_price)
     if filters.max_price is not None:
         statement = statement.where(Vehicle.price <= filters.max_price)
-    if ranks:
+    sort_columns = {
+        "price_asc": Vehicle.price.asc(),
+        "price_desc": Vehicle.price.desc(),
+        "year_asc": Vehicle.year.asc().nulls_last(),
+        "year_desc": Vehicle.year.desc().nulls_last(),
+    }
+    if filters.sort in sort_columns:
+        statement = statement.order_by(sort_columns[filters.sort])
+    elif ranks:
         statement = statement.order_by(sum(ranks).desc())
     return statement.order_by(Vehicle.id)

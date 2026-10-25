@@ -73,6 +73,12 @@ class VehicleSearch(BaseModel):
     make: str | None = Field(default=None, min_length=1, max_length=100)
     model: str | None = Field(default=None, min_length=1, max_length=100)
     category: str | None = Field(default=None, min_length=1, max_length=50)
+    # Repeated plural parameters are exact selections; singular make/model retain partial search.
+    makes: list[Annotated[str, Field(min_length=1, max_length=100)]] = Field(default_factory=list, max_length=50)
+    models: list[Annotated[str, Field(min_length=1, max_length=100)]] = Field(default_factory=list, max_length=50)
+    categories: list[Annotated[str, Field(min_length=1, max_length=50)]] = Field(default_factory=list, max_length=50)
+    condition: Literal["new", "used"] | None = None
+    sort: Literal["relevance", "price_asc", "price_desc", "year_asc", "year_desc"] = "relevance"
     min_price: Decimal | None = Field(default=None, ge=0, max_digits=12, decimal_places=2, allow_inf_nan=False)
     max_price: Decimal | None = Field(default=None, ge=0, max_digits=12, decimal_places=2, allow_inf_nan=False)
 
