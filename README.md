@@ -1,5 +1,7 @@
 # Car Dealership Inventory System
 
+> **Deployment documentation:** The sections below describe the earlier authentication checkpoint and have not yet been fully refreshed. The repository now includes vehicle inventory and a React frontend. Use the [current frontend setup and Vercel/Render deployment guide](frontend/README.md#deploy-to-vercel-with-the-render-backend) and [backend operations guide](backend/README.md) for the current application. Deployment requires a public `VITE_API_BASE_URL` in Vercel and an exact `CORS_ALLOWED_ORIGINS` allowlist on Render.
+
 A TDD-focused software engineering assignment for a car dealership inventory system. The current checkpoint implements the PostgreSQL connection and authentication foundation. **Vehicle inventory and the frontend are not implemented yet.**
 
 ## Current functionality

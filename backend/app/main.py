@@ -4,8 +4,10 @@ from fastapi.responses import JSONResponse
 
 from app.auth import router as auth_router
 from app.vehicles import router as vehicles_router
+from app.cors import configure_cors
 
 app = FastAPI(title="Car Dealership Inventory System")
+configure_cors(app)
 app.include_router(auth_router)
 app.include_router(vehicles_router)
 

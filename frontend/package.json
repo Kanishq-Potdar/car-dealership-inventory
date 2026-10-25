@@ -8,7 +8,8 @@
     "check": "tsc --noEmit",
     "build": "npm run check && vite build",
     "preview": "vite preview --host 127.0.0.1",
-    "test": "node e2e/run.mjs"
+    "test:api": "node --test tests/api.test.mjs",
+    "test": "npm run test:api && node e2e/run.mjs"
   },
   "dependencies": {
     "react": "19.3.1",

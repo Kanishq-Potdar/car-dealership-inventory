@@ -19,10 +19,13 @@ export class ApiError extends Error {
   constructor(message: string, public status: number) { super(message) }
 }
 
+// Empty locally: Vite proxies /api. Production embeds this public URL at build time.
+const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '').trim().replace(/\/+$/, '')
+
 export async function api<T>(path: string, token?: string, options: RequestInit = {}): Promise<T> {
   let response: Response
   try {
-    response = await fetch('/api' + path, {
+    response = await fetch(`${apiBaseUrl}/api${path}`, {
       ...options,
       headers: { ...(options.body ? { 'Content-Type': 'application/json' } : {}),
         ...(token ? { Authorization: `Bearer ${token}` } : {}), ...options.headers },

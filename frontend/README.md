@@ -36,7 +36,43 @@ The browser tests require the project's root `.venv`, installed backend dependen
 
 Tests cover real registration/login, duplicate registration, role-specific actions and backend authorization, multi-select/condition/price filters, q search and suggestions, sorting, admin CRUD/price editing/stock adjustments/alerts, purchasing, zero-stock controls, session persistence/logout and mobile layout. Server-error/loading/401 UI cases use explicitly mocked responses. Screenshots from the isolated test inventory are written to ignored `test-results/`; they are test fixtures, not real dealership listings.
 
-`npm.cmd run build` type-checks the app and creates `dist/`. `npm.cmd run preview` serves a local preview with the same API proxy. For deployment, serve `dist/` over HTTPS and configure the hosting reverse proxy to forward `/api` to FastAPI; Vite's development proxy is not part of the static build.
+`npm.cmd run build` type-checks the app and creates `dist/`. `npm.cmd run preview` serves a local preview with the same API proxy when the build has no API base URL configured. `npm.cmd run test:api` runs database-free API-client tests, also included at the start of `npm.cmd test`. The client tests compile the real module with local and production base URLs and stub fetch; they never contact Render. Browser tests always use the isolated local API, even if a production URL is set in your environment.
+
+## Deploy to Vercel with the Render backend
+
+After reviewing and publishing the code yourself, import `Kanishq-Potdar/car-dealership-inventory` into Vercel. No deployment is performed by these instructions or the build script.
+
+| Vercel setting | Value |
+| --- | --- |
+| Root Directory | `frontend` |
+| Framework Preset | Vite |
+| Install Command | `npm ci` |
+| Build Command | `npm run build` |
+| Output Directory | `dist` |
+| Node.js version | 24.x (matches the local test environment) |
+| Production environment variable | `VITE_API_BASE_URL=https://car-dealership-inventory-hcpa.onrender.com` |
+
+Set the variable in Vercel's **Production** environment before building. Its value is the backend origin, without `/api`; the client appends `/api` and the endpoint path. Trailing slashes are removed. For example, login goes to `https://car-dealership-inventory-hcpa.onrender.com/api/auth/login`. Authorization headers, JSON requests and error handling are unchanged.
+
+Vite embeds `VITE_*` values in the public JavaScript bundle at build time. Changing the value requires another build/deployment. Never set `DATABASE_URL`, database passwords, `JWT_SECRET`, access tokens or private credentials as frontend variables. The URL is public configuration. See [Vite environment variables](https://vite.dev/guide/env-and-mode) and [Vercel's Vite documentation](https://vercel.com/docs/frameworks/frontend/vite).
+
+For local development leave `VITE_API_BASE_URL` unset or empty, as shown in [.env.example](.env.example). Vite's existing `/api` proxy and optional `API_TARGET` continue working. `API_TARGET` only affects the local Vite server; it cannot configure a deployed static build. The application uses hash routes such as `/#/register`, so no SPA rewrite or Vercel API proxy is required for the current routes.
+
+### Render CORS configuration
+
+Once Vercel assigns the production URL, set **`CORS_ALLOWED_ORIGINS` on the Render backend** to a JSON array containing that exact origin, for example:
+
+```text
+["https://YOUR-VERCEL-PRODUCTION-DOMAIN.vercel.app"]
+```
+
+Replace the example with the actual URL's scheme and host, without a path. The final frontend domain is not yet known. For a custom domain, add its exact origin to the array as well. Do not use `*` or a wildcard for all Vercel subdomains. Preview URLs are denied unless explicitly added; only enable a preview against this backend if you intend it to access the same data. A separate staging backend is preferable for preview testing.
+
+Deploy the backend code containing the CORS middleware and restart/redeploy Render after setting the variable. Defaults allow no cross-origin browser access. The allowlist accepts JSON arrays only and invalid origin values fail startup. Only GET/POST/PUT/DELETE and Authorization/Content-Type are permitted for cross-origin API calls. Cookies are not enabled; JWT Bearer authentication and admin checks still apply. CORS controls browser access, not API authorization. See [FastAPI CORS documentation](https://fastapi.tiangolo.com/tutorial/cors/).
+
+Preserve the existing Render database and signing-secret settings. For a service rooted at `backend`, the build command is `pip install -r requirements.txt` and the start command is `uvicorn app.main:app --host 0.0.0.0 --port $PORT`, with `/health` as its health-check path. If the existing service uses the repository root instead, its equivalent commands are `pip install -r backend/requirements.txt` and `uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port $PORT`; do not switch directories without also matching the commands. `DATABASE_URL` must retain the `postgresql+psycopg://` driver prefix, and `JWT_SECRET` stays on Render only. No schema migration, initialization or seeding is required for this change. See [Render's FastAPI deployment guide](https://render.com/docs/deploy-fastapi).
+
+After both deployments, check `/health`, then use the Vercel UI and browser Network panel to confirm API requests target Render and responses have `Access-Control-Allow-Origin` matching the Vercel origin. Sign in with an existing account and verify catalogue access; avoid test purchases or registrations against production data. A successful local build does not verify the final deployed CORS configuration.
 
 ## API behavior and scope
 
